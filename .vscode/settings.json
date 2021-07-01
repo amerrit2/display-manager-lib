@@ -1,0 +1,6 @@
+{
+    "prettier.configPath": "../.prettierrc",
+    "editor.codeActionsOnSave": {
+        "source.fixAll": true
+    }
+}
