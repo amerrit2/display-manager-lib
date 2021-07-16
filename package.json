@@ -1,20 +1,40 @@
 {
-  "name": "minimal-windows",
-  "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "tsc",
-    "start": "npm run build && node dist/index.js",
-    "clean:ts": "rm -rf dist",
-    "clean": "rm -rf node_modules && rm -rf dist"
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^4.28.1",
-    "@typescript-eslint/parser": "^4.28.1",
-    "eslint": "^7.29.0",
-    "typescript": "^4.3.4"
-  }
+    "name": "minimal-windows",
+    "version": "1.0.0",
+    "description": "",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "npm run build && node dist/index.js",
+        "clean:ts": "rm -rf dist",
+        "clean": "rm -rf node_modules && rm -rf dist"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/json-schema": "^7.0.7",
+        "@typescript-eslint/eslint-plugin": "^4.28.1",
+        "@typescript-eslint/parser": "^4.28.1",
+        "eslint": "^7.29.0",
+        "typescript": "^4.3.4",
+        "@types/node": "^16.3.3"
+    },
+    "iohook": {
+        "targets": [
+            "node-83"
+        ],
+        "platforms": [
+            "win32"
+        ],
+        "arches": [
+            "x64"
+        ]
+    },
+    "dependencies": {
+        "@hensm/ddcci": "^0.1.0",
+        "ajv": "^8.6.0",
+        "iohook": "^0.6.6",
+        "node-window-manager": "^2.2.4",
+        "systeminformation": "^5.7.7"
+    }
 }
