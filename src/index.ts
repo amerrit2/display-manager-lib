@@ -106,6 +106,14 @@ async function pathExists(url: string) {
     }
 }
 
+function flipInput(input: number) {
+    if (input === InputSource.DVI) {
+        return InputSource.HDMI_1;
+    }
+
+    return InputSource.DVI;
+}
+
 (async function main() {
     const configPath = resolve(appDir, 'config.json');
     if (!(await pathExists(appDir))) {
@@ -124,6 +132,8 @@ async function pathExists(url: string) {
     }
 
     const monitors = getMonitorList();
+
+
     console.log(
         'Current Monitor inputs: ',
         monitors.reduce((out, mon) => {
@@ -133,15 +143,9 @@ async function pathExists(url: string) {
     );
 
     iohook.on('keydown', (data: KeydownEvent) => {
-        for (const config of configurations) {
-            if (config.keyBinding.keycode === data.keycode && hasModifier(config.keyBinding.modifier, data)) {
-                console.log('HOTKEY HIT - DOING THING! - ', JSON.stringify(config));
-                for (const mon of config.monitors) {
-                    for (const [code, value] of Object.entries(mon.codes)) {
-                        console.log('Setting value: ', mon.id, parseInt(code, 16), value);
-                        setVCP(mon.id, parseInt(code, 16), value);
-                    }
-                }
+        if (data.keycode === 2 && data.altKey === true) {
+            for (const mon of monitors) {
+                setVCP(mon, VcpCodes.INPUT_SOURCE, flipInput(getVCP(mon, VcpCodes.INPUT_SOURCE)[0]));
             }
         }
     });
