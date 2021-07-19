@@ -106,12 +106,14 @@ async function pathExists(url: string) {
     }
 }
 
-function flipInput(input: number) {
-    if (input === InputSource.DVI) {
-        return InputSource.HDMI_1;
-    }
+const sleep = async (ms: number) => new Promise<void>((a) => setTimeout(a, ms));
 
-    return InputSource.DVI;
+async function flipInput(monId: string) {
+    const newInput = getVCP(monId, VcpCodes.INPUT_SOURCE)[0] === InputSource.DVI ? InputSource.HDMI_1 : InputSource.DVI;
+
+    console.log(`Setting ${monId} to ${newInput}`);
+    setVCP(monId, VcpCodes.INPUT_SOURCE, newInput);
+    await sleep(500);
 }
 
 (async function main() {
@@ -133,24 +135,32 @@ function flipInput(input: number) {
 
     const monitors = getMonitorList();
 
-
+    console.log('moniotrs: ', monitors);
     console.log(
         'Current Monitor inputs: ',
         monitors.reduce((out, mon) => {
-            out[mon] = getVCP(mon, VcpCodes.INPUT_SOURCE)[0];
+            try {
+                out[mon] = getVCP(mon, VcpCodes.INPUT_SOURCE)[0];
+            } catch (e) {
+                console.error(`VCP fetch failed: ${e.message}`);
+            }
             return out;
         }, {} as { [id: string]: number }),
     );
 
-    iohook.on('keydown', (data: KeydownEvent) => {
-        if (data.keycode === 2 && data.altKey === true) {
-            for (const mon of monitors) {
-                setVCP(mon, VcpCodes.INPUT_SOURCE, flipInput(getVCP(mon, VcpCodes.INPUT_SOURCE)[0]));
-            }
-        }
-    });
+    await Promise.all(monitors.map((mon) => flipInput(mon)));
 
-    iohook.start();
+    // iohook.on('keydown', (data: KeydownEvent) => {
+    //     if (data.keycode === 2 && data.altKey === true) {
+    //         for (const mon of monitors) {
+    //             setVCP(mon, VcpCodes.INPUT_SOURCE, flipInput(getVCP(mon, VcpCodes.INPUT_SOURCE)[0]));
+    //         }
+    //     }
+    // });
+
+    iohook.unload();
+
+    // iohook.start();
 
     // setVCP(monitors[1], VcpCodes.INPUT_SOURCE, 17);
 
