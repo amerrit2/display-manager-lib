@@ -1,12 +1,14 @@
-import { windowManager, Window } from 'node-window-manager';
 import AJV, { ValidateFunction } from 'ajv';
 import { JSONSchema7 } from 'json-schema';
-import { _getVCP as getVCP, getMonitorList, _setVCP as setVCP } from '@hensm/ddcci';
+
 import { VcpCodes } from './vcp';
 import { graphics } from 'systeminformation';
 import iohook from 'iohook';
 import { resolve } from 'path';
 import { mkdir, readFile, stat, writeFile } from 'fs/promises';
+import { getMonitorList } from '@hensm/ddcci';
+import { flipInput, getAllInputs } from './monitors';
+import { getWindowConfiguration } from './windows';
 
 const { APPDATA: appDataDir } = process.env;
 if (!appDataDir) throw new Error('Failed to determine AppData directory. Are you on windows?');
@@ -67,11 +69,6 @@ const configSchema: JSONSchema7 = {
 
 const validateConfig: ValidateFunction<Configurations> = ajv.compile(configSchema);
 
-enum InputSource {
-    HDMI_1 = 0,
-    DVI = 17,
-}
-
 interface KeydownEvent {
     shiftKey: boolean;
     altKey: boolean;
@@ -106,16 +103,6 @@ async function pathExists(url: string) {
     }
 }
 
-const sleep = async (ms: number) => new Promise<void>((a) => setTimeout(a, ms));
-
-async function flipInput(monId: string) {
-    const newInput = getVCP(monId, VcpCodes.INPUT_SOURCE)[0] === InputSource.DVI ? InputSource.HDMI_1 : InputSource.DVI;
-
-    console.log(`Setting ${monId} to ${newInput}`);
-    setVCP(monId, VcpCodes.INPUT_SOURCE, newInput);
-    await sleep(500);
-}
-
 (async function main() {
     const configPath = resolve(appDir, 'config.json');
     if (!(await pathExists(appDir))) {
@@ -135,21 +122,10 @@ async function flipInput(monId: string) {
 
     const monitors = getMonitorList();
 
-    console.log('moniotrs: ', monitors);
-    console.log(
-        'Current Monitor inputs: ',
-        monitors.reduce((out, mon) => {
-            try {
-                out[mon] = getVCP(mon, VcpCodes.INPUT_SOURCE)[0];
-            } catch (e) {
-                console.error(`VCP fetch failed: ${e.message}`);
-            }
-            return out;
-        }, {} as { [id: string]: number }),
-    );
+    console.log('monitors: ', monitors);
+    console.log('Current Monitor inputs: ', await getAllInputs());
 
-    await Promise.all(monitors.map((mon) => flipInput(mon)));
-
+    await getWindowConfiguration();
     // iohook.on('keydown', (data: KeydownEvent) => {
     //     if (data.keycode === 2 && data.altKey === true) {
     //         for (const mon of monitors) {
